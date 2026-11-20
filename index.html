@@ -2078,8 +2078,8 @@ jXVr0CMDZh544Qs=
 
         let spin = -G.startLon * D2R, tilt = TILT0, spinVel = AUTO;
         let cs = 1, ss = 0, ct = 1, st = 0;
-        let dragging = false, dragId = -1, lx = 0, ly = 0, lt = 0, downX = 0, downY = 0, downT = 0, moved = 0, prevNow = 0;
-        const ptr = { x: -1e4, y: -1e4, tx: -1e4, ty: -1e4, amp: 0, energy: 0, inside: false, overGlobe: false, gx: 0, gy: 0 };
+        let dragging = false, dragId = -1, lx = 0, ly = 0, lt = 0, prevNow = 0;
+        const ptr = { x: -1e4, y: -1e4, tx: -1e4, ty: -1e4, amp: 0, energy: 0, inside: false, overGlobe: false };
         const ripples = [], arcs = [], shields = [], bursts = [];
         let lastInteract = 0, nextAmbient = performance.now() + 3000, nextAttack = performance.now() + 600;
         const tmp = [0, 0, 0], pv = [0, 0, 0];
@@ -2088,13 +2088,6 @@ jXVr0CMDZh544Qs=
         function project(v, out) {
           const x1 = v[0] * cs + v[2] * ss, z1 = v[2] * cs - v[0] * ss, y1 = v[1];
           out[0] = x1; out[1] = y1 * ct - z1 * st; out[2] = y1 * st + z1 * ct;
-        }
-        function unproject(sx, sy) {
-          const x = (sx - gcx) / gR, y = -(sy - gcy) / gR, r2 = x * x + y * y;
-          if (r2 > 1) return null;
-          const z = Math.sqrt(1 - r2);
-          const y1 = y * ct + z * st, z1 = z * ct - y * st;
-          return [x * cs - z1 * ss, y1, x * ss + z1 * cs];
         }
 
         function addArc(a, b, kind, t0, speed) {
@@ -2338,7 +2331,7 @@ jXVr0CMDZh544Qs=
             lev[gI[k]] = v >= 1 ? NL - 1 : Math.round(v * (NL - 1));
           }
 
-          // 3) overlay: attacks (red), defense (blue), home node, cursor reticle
+          // 3) overlay: attacks (red), defense (blue), home node
           for (let k = 0; k < ovl.length; k++) ov[ovl[k]] = 0;
           ovl.length = 0;
           project(HOME, pv);
@@ -2401,14 +2394,6 @@ jXVr0CMDZh544Qs=
             glow(hx, hy, 32, 1, 0.85 * (1 - smooth(0.04, 1, age)));
           }
           if (homeZ > 0.02) put(hx, hy, 64, 1, 1);
-          if (ptr.overGlobe && !dragging && ptr.amp > 0.3 && !narrow) {
-            const a = 0.9 * ptr.amp;
-            put(ptr.gx, ptr.gy, 43, a, 0);
-            put(ptr.gx - cw * 2, ptr.gy, 45, a * 0.8, 0);
-            put(ptr.gx + cw * 2, ptr.gy, 45, a * 0.8, 0);
-            put(ptr.gx, ptr.gy - ch, 124, a * 0.8, 0);
-            put(ptr.gx, ptr.gy + ch, 124, a * 0.8, 0);
-          }
 
           // 4) paint
           ctx.clearRect(0, 0, W, H);
@@ -2438,23 +2423,6 @@ jXVr0CMDZh544Qs=
           }
         }
 
-        // Click / tap on the globe launches an attack from that spot – home defends itself
-        function launchFrom(x, y) {
-          const now = performance.now();
-          const origin = unproject(x, y);
-          const sources = [];
-          if (origin && angleBetween(origin, HOME) > 0.12) sources.push(origin, origin, origin);
-          else for (let i = 0; i < 3; i++) sources.push(CITIES[(Math.random() * CITIES.length) | 0]);
-          sources.forEach((a, i) => addArc(a, HOME, 'atk', now + i * 150, 0.85));
-          if (origin) bursts.push({ v: origin, t0: now, def: false });
-          if (Quality.tier === 0) {
-            // static mode: show the result immediately instead of animating
-            arcs.forEach(A => { if (A.t0 >= now) A.t0 = now - A.dur * 0.7; });
-            draw(performance.now());
-          }
-          wake();
-        }
-
         window.addEventListener('pointermove', e => {
           const r = canvas.getBoundingClientRect();
           const x = e.clientX - r.left, y = e.clientY - r.top;
@@ -2462,7 +2430,6 @@ jXVr0CMDZh544Qs=
           ptr.inside = inside && e.pointerType === 'mouse';
           ptr.overGlobe = ptr.inside && Math.hypot(x - gcx, y - gcy) < gR;
           if (!inside) return;
-          ptr.gx = x; ptr.gy = y;
           if (ptr.tx > -9000) ptr.energy = Math.min(1, ptr.energy + Math.hypot(x - ptr.tx, y - ptr.ty) / 280);
           else { ptr.x = x; ptr.y = y; }
           ptr.tx = x; ptr.ty = y;
@@ -2476,7 +2443,6 @@ jXVr0CMDZh544Qs=
           lastInteract = performance.now();
           if (Math.hypot(x - gcx, y - gcy) < gR * 1.08) {
             dragging = true; dragId = e.pointerId; lx = x; ly = y; lt = performance.now(); spinVel = 0;
-            downX = x; downY = y; downT = lt; moved = 0;
             try { canvas.setPointerCapture(e.pointerId); } catch (_) { }
             canvas.style.cursor = 'grabbing';
           } else if (Quality.tier > 0) {
@@ -2489,22 +2455,20 @@ jXVr0CMDZh544Qs=
           const x = e.clientX - r.left, y = e.clientY - r.top;
           if (dragging && e.pointerId === dragId) {
             const now = performance.now(), dx = x - lx, dy = y - ly, dts = Math.max(8, now - lt) / 1000;
-            moved += Math.abs(dx) + Math.abs(dy);
             spin += dx / gR;
             tilt = Math.max(-0.3, Math.min(1.1, tilt + dy / gR));
             spinVel = spinVel * 0.5 + (dx / gR / dts) * 0.5;
             lx = x; ly = y; lt = now;
             if (Quality.tier === 0) draw(now);
           } else {
-            canvas.style.cursor = Math.hypot(x - gcx, y - gcy) < gR * 1.08 ? 'crosshair' : '';
+            canvas.style.cursor = Math.hypot(x - gcx, y - gcy) < gR * 1.08 ? 'grab' : '';
           }
         });
         const endDrag = e => {
           if (!dragging || e.pointerId !== dragId) return;
           dragging = false;
-          canvas.style.cursor = 'crosshair';
+          canvas.style.cursor = 'grab';
           spinVel = Math.max(-3, Math.min(3, spinVel));
-          if (e.type === 'pointerup' && moved < 6 && performance.now() - downT < 450) launchFrom(downX, downY);
         };
         canvas.addEventListener('pointerup', endDrag);
         canvas.addEventListener('pointercancel', endDrag);
