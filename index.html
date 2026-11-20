@@ -2079,7 +2079,7 @@ jXVr0CMDZh544Qs=
         let spin = -G.startLon * D2R, tilt = TILT0, spinVel = AUTO;
         let cs = 1, ss = 0, ct = 1, st = 0;
         let dragging = false, dragId = -1, lx = 0, ly = 0, lt = 0, prevNow = 0;
-        const ptr = { x: -1e4, y: -1e4, tx: -1e4, ty: -1e4, amp: 0, energy: 0, inside: false, overGlobe: false };
+        const ptr = { x: -1e4, y: -1e4, tx: -1e4, ty: -1e4, amp: 0, energy: 0, inside: false };
         const ripples = [], arcs = [], shields = [], bursts = [];
         let lastInteract = 0, nextAmbient = performance.now() + 3000, nextAttack = performance.now() + 600;
         const tmp = [0, 0, 0], pv = [0, 0, 0];
@@ -2286,7 +2286,7 @@ jXVr0CMDZh544Qs=
           // 1) flowing field + cursor glow + ripples
           const drift = t * 0.03, zf = t * 0.06, zf2 = t * 0.1 + 10;
           const pr = narrow ? 90 : 140, pr2 = 2 * pr * pr;
-          const pAmp = ptr.amp * (0.18 + 0.5 * ptr.energy) * (ptr.overGlobe ? 0 : 1);
+          const pAmp = ptr.amp * (0.18 + 0.5 * ptr.energy);
           const rw2 = 2 * 22 * 22, nR = ripples.length;
           for (let y = 0; y < rows; y++) {
             const py = y * ch, row = y * cols;
@@ -2428,14 +2428,13 @@ jXVr0CMDZh544Qs=
           const x = e.clientX - r.left, y = e.clientY - r.top;
           const inside = x >= 0 && y >= 0 && x <= r.width && y <= r.height;
           ptr.inside = inside && e.pointerType === 'mouse';
-          ptr.overGlobe = ptr.inside && Math.hypot(x - gcx, y - gcy) < gR;
           if (!inside) return;
           if (ptr.tx > -9000) ptr.energy = Math.min(1, ptr.energy + Math.hypot(x - ptr.tx, y - ptr.ty) / 280);
           else { ptr.x = x; ptr.y = y; }
           ptr.tx = x; ptr.ty = y;
           lastInteract = performance.now();
         }, { passive: true });
-        doc.addEventListener('pointerleave', () => { ptr.inside = false; ptr.overGlobe = false; });
+        doc.addEventListener('pointerleave', () => { ptr.inside = false; });
 
         canvas.addEventListener('pointerdown', e => {
           const r = canvas.getBoundingClientRect();
