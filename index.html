@@ -61,6 +61,7 @@
         "affiliation": { "@type": "EducationalOrganization", "name": "Cirkevná spojená škola Dolný Kubín" },
         "address": { "@type": "PostalAddress", "addressLocality": "Dolný Kubín", "addressCountry": "SK" },
         "knowsAbout": ["Cybersecurity", "Penetration testing", "Digital forensics", "Capture the Flag"],
+        "award": ["2nd place, Startup Weekend Žilina #13 (2026)"],
         "sameAs": [
           "https://github.com/janvsec",
           "https://www.linkedin.com/in/janvojvoda/",
@@ -106,6 +107,8 @@
 
       --red: #ff4d5a;   /* primary – attack */
       --blue: #4c9dff;  /* secondary – defense */
+      --red-line: color-mix(in srgb, var(--red) 38%, transparent);
+      --red-glow: color-mix(in srgb, var(--red) 11%, transparent);
 
       --c-off: #5fbf8a;
       --c-for: #6aa3d8;
@@ -208,8 +211,42 @@
     }
     .btn:hover { background: rgba(255, 255, 255, .05); border-color: var(--line-3); }
     .btn:active { transform: translateY(1px); }
-    .btn-primary { background: var(--text); border-color: var(--text); color: #0a0a0b; }
-    .btn-primary:hover { background: #fff; border-color: #fff; }
+    /* Glossy white: bright top half, soft grey bottom half, light sheen sweeps across on hover */
+    .btn-primary {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      color: #0a0a0b;
+      border-color: rgba(255, 255, 255, .9);
+      background: linear-gradient(180deg, #ffffff 0%, #f4f4f6 49%, #e6e6ea 51%, #d9d9de 100%);
+      box-shadow:
+        inset 0 1px 0 #fff,
+        inset 0 -1px 0 rgba(0, 0, 0, .1),
+        0 1px 2px rgba(0, 0, 0, .5),
+        0 8px 22px -10px rgba(255, 255, 255, .35);
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 45%;
+      background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .95), transparent);
+      transform: translateX(-130%) skewX(-18deg);
+      pointer-events: none;
+    }
+    .btn-primary:hover {
+      border-color: #fff;
+      background: linear-gradient(180deg, #ffffff 0%, #f9f9fa 49%, #ececf0 51%, #e2e2e6 100%);
+      box-shadow:
+        inset 0 1px 0 #fff,
+        inset 0 -1px 0 rgba(0, 0, 0, .1),
+        0 1px 2px rgba(0, 0, 0, .5),
+        0 10px 28px -10px rgba(255, 255, 255, .5);
+    }
+    .btn-primary:hover::after { transform: translateX(280%) skewX(-18deg); transition: transform .75s var(--ease); }
     .btn-sm { height: 36px; padding: 0 14px; font-size: 14px; border-radius: 8px; }
     .btn .arrow { transition: transform .2s var(--ease); }
     .btn:hover .arrow { transform: translateX(3px); }
@@ -419,6 +456,7 @@
       flex-wrap: wrap;
       gap: 14px 40px;
       padding: 26px var(--pad);
+      border-top: 1px solid var(--line);
       border-bottom: 1px solid var(--line);
     }
     .quote { font-size: 17px; font-style: italic; color: var(--text); }
@@ -501,24 +539,46 @@
       min-height: 240px;
       padding: 24px;
       background: var(--bg);
-      transition: background .2s;
+      transition: background .2s, box-shadow .2s;
     }
+    /* Red accent: a short tick at rest, a full line + red outline on hover */
     .proj::before {
       content: '';
       position: absolute;
+      z-index: 2;
       left: 0;
       top: 0;
-      width: 100%;
+      width: 28px;
       height: 2px;
       background: var(--red);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform .4s var(--ease);
+      transition: width .45s var(--ease);
     }
-    .proj:hover { background: var(--bg-1); }
-    .proj:hover::before { transform: scaleX(1); }
+    .proj:hover { background: var(--bg-1); box-shadow: inset 0 0 0 1px var(--red-line); }
+    .proj:hover::before { width: 100%; }
     .proj-meta { display: flex; justify-content: space-between; gap: 12px; font-family: var(--mono); font-size: 12px; color: var(--text-3); }
+    .proj-meta > span:first-child { color: var(--red); }
     .proj-name { margin-top: 18px; font-size: 19px; font-weight: 600; letter-spacing: -.015em; }
+    .proj-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 20px; }
+
+    /* Cursor spotlight on every card and row (the script sets --mx / --my) */
+    .proj::after, .cert::after, .talk::after, .comp::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .35s;
+      background: radial-gradient(380px circle at var(--mx, 50%) var(--my, -40%), var(--red-glow), transparent 70%);
+    }
+    .proj:hover::after, .cert:hover::after, .talk:hover::after, .comp:hover::after { opacity: 1; }
+    .proj > *, .cert > *, .talk > *, .comp > * { position: relative; z-index: 1; }
+
+    /* Photo slots: hidden until an image src is filled in (see README) */
+    .shot { margin: 0; background: var(--bg-1); overflow: hidden; }
+    .shot[hidden], .shot:has(img[src=""]) { display: none !important; }
+    .shot img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+    .proj .shot { margin: -24px -24px 6px; border-bottom: 1px solid var(--line); }
     .proj-desc { font-size: 15px; line-height: 1.55; color: var(--text-2); }
     .proj-foot {
       margin-top: auto;
@@ -532,7 +592,7 @@
       color: var(--text-3);
     }
     .proj-go { color: var(--text-2); transition: color .15s, transform .2s var(--ease); }
-    .proj:hover .proj-go { color: var(--text); transform: translate(2px, -2px); }
+    a.proj:hover .proj-go { color: var(--red); transform: translate(2px, -2px); }
 
     /* =========================================================
        Panels (results)
@@ -670,16 +730,100 @@
     .cert:last-child { border-bottom: 0; }
     .cert-head { padding-top: 11px; padding-bottom: 11px; background: var(--bg-1); font-family: var(--mono); font-size: 12px; color: var(--text-3); }
     .cert-head span:last-child { text-align: right; }
-    a.cert { transition: background .15s; }
-    a.cert:hover { background: var(--bg-1); }
+    .cert, .comp { position: relative; transition: background .15s; }
+    .cert::before, .comp::before {
+      content: '';
+      position: absolute;
+      z-index: 2;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--red);
+      transform: scaleY(0);
+      transition: transform .3s var(--ease);
+    }
+    .cert:hover, .comp:hover { background: var(--bg-1); }
+    .cert:hover::before, .comp:hover::before { transform: scaleY(1); }
     .cert-main { min-width: 0; }
     .cert-name { display: block; font-size: 15.5px; font-weight: 500; }
     .cert-id { display: block; margin-top: 2px; font-family: var(--mono); font-size: 12px; color: var(--text-3); overflow-wrap: anywhere; }
     .cert-issuer { font-size: 14px; color: var(--text-2); }
     .cert-date { font-family: var(--mono); font-size: 13px; color: var(--text-2); white-space: nowrap; }
     .cert-verify { justify-self: end; font-family: var(--mono); font-size: 13px; color: var(--text-3); white-space: nowrap; }
-    a.cert .cert-verify { color: var(--text); }
-    a.cert:hover .cert-verify { color: var(--red); }
+    a.cert .cert-verify { color: var(--red); transition: transform .2s var(--ease); }
+    a.cert:hover .cert-verify { transform: translate(2px, -2px); }
+
+    /* =========================================================
+       Results: hackathons & other CTFs
+       ========================================================= */
+    .comps { border-top: 1px solid var(--line); }
+    .comp {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr) 100px;
+      gap: 20px;
+      align-items: center;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .comp:last-child { border-bottom: 0; }
+    .badge {
+      justify-self: start;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: var(--text-2);
+      border: 1px solid var(--line-2);
+      border-radius: 6px;
+      padding: 3px 9px;
+      white-space: nowrap;
+    }
+    .badge.hot { color: var(--red); border-color: var(--red-line); background: var(--red-glow); }
+    .comp-main { min-width: 0; }
+    .comp-name { display: block; font-size: 15.5px; font-weight: 500; }
+    .comp-desc { display: block; margin-top: 2px; font-size: 14px; color: var(--text-2); }
+    .comp-date { justify-self: end; font-family: var(--mono); font-size: 13px; color: var(--text-2); white-space: nowrap; }
+
+    /* =========================================================
+       Talks & media
+       ========================================================= */
+    .talk {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      overflow: hidden;
+      background: var(--bg);
+      transition: border-color .2s;
+    }
+    .talk::before { content: ''; position: absolute; z-index: 2; left: 0; top: 0; width: 28px; height: 2px; background: var(--red); transition: width .45s var(--ease); }
+    .talk:hover { border-color: var(--red-line); }
+    .talk:hover::before { width: 100%; }
+    .talk.has-shot { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .talk .shot { position: relative; min-height: 340px; border-right: 1px solid var(--line); }
+    .talk .shot img { position: absolute; inset: 0; height: 100%; aspect-ratio: auto; }
+    .talk-body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 28px 56px; align-items: end; padding: 28px; }
+    .talk.has-shot .talk-body { grid-template-columns: minmax(0, 1fr); }
+    .talk-top { grid-column: 1 / -1; align-self: start; display: flex; justify-content: space-between; gap: 12px; font-family: var(--mono); font-size: 12.5px; color: var(--text-3); }
+    .talk-top span:first-child { color: var(--red); }
+    .talk h3 { font-size: clamp(1.625rem, 3vw, 2.25rem); font-weight: 600; letter-spacing: -.03em; line-height: 1.12; }
+    .talk-where { margin-top: 8px; font-size: 15px; }
+    .talk-desc { margin-top: 14px; max-width: 34em; font-size: 15.5px; color: var(--text-2); }
+    .talk-tags { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .talk-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 10px; }
+    .talk-stat { padding: 18px 20px; min-width: 0; }
+    .talk-stat + .talk-stat { border-left: 1px solid var(--line); }
+    .talk-stat b {
+      display: block;
+      font-family: var(--mono);
+      font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+      font-weight: 500;
+      letter-spacing: -.03em;
+      line-height: 1.1;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    .talk-stat span { display: block; margin-top: 6px; font-size: 13.5px; color: var(--text-3); }
 
     /* =========================================================
        Experience
@@ -857,6 +1001,16 @@
 
       .proj-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .proj { min-height: 210px; padding: 20px; }
+      .proj .shot { margin: -20px -20px 4px; }
+
+      .talk.has-shot { grid-template-columns: minmax(0, 1fr); }
+      .talk .shot { min-height: 0; border-right: 0; border-bottom: 1px solid var(--line); }
+      .talk .shot img { position: static; height: auto; aspect-ratio: 16 / 10; }
+      .talk-body, .talk.has-shot .talk-body { grid-template-columns: minmax(0, 1fr); gap: 22px; padding: 20px; }
+      .talk-stat { padding: 16px; }
+
+      .comp { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; padding: 16px 18px; }
+      .comp-main { grid-column: 1 / -1; grid-row: 2; }
 
       .panel-head, .chart-block, .cats { padding-left: 18px; padding-right: 18px; }
       .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -896,7 +1050,7 @@
     }
 
     @media (max-width: 599px) {
-      .proj-grid { grid-template-columns: minmax(0, 1fr); }
+      .proj-grid, .proj-grid.two { grid-template-columns: minmax(0, 1fr); }
       .proj { min-height: 0; }
       .proj-name { margin-top: 12px; }
       .actions .btn { flex: 1 1 auto; }
@@ -931,6 +1085,7 @@
       <nav class="nav-links" aria-label="Primary">
         <a href="#projects" data-spy data-key="nav.proj">Projekty</a>
         <a href="#results" data-spy data-key="nav.res">Výsledky</a>
+        <a href="#talks" data-spy data-key="nav.talk">Prednášky</a>
         <a href="#certs" data-spy data-key="nav.cert">Certifikáty</a>
         <a href="#experience" data-spy data-key="nav.exp">Prax</a>
       </nav>
@@ -949,9 +1104,10 @@
     <nav aria-label="Mobile">
       <a class="sheet-link" href="#projects" data-spy><span data-key="nav.proj">Projekty</span><span class="n">01</span></a>
       <a class="sheet-link" href="#results" data-spy><span data-key="nav.res">Výsledky</span><span class="n">02</span></a>
-      <a class="sheet-link" href="#certs" data-spy><span data-key="nav.cert">Certifikáty</span><span class="n">03</span></a>
-      <a class="sheet-link" href="#experience" data-spy><span data-key="nav.exp">Prax</span><span class="n">04</span></a>
-      <a class="sheet-link" href="#contact" data-spy><span data-key="nav.con">Kontakt</span><span class="n">05</span></a>
+      <a class="sheet-link" href="#talks" data-spy><span data-key="nav.talk">Prednášky</span><span class="n">03</span></a>
+      <a class="sheet-link" href="#certs" data-spy><span data-key="nav.cert">Certifikáty</span><span class="n">04</span></a>
+      <a class="sheet-link" href="#experience" data-spy><span data-key="nav.exp">Prax</span><span class="n">05</span></a>
+      <a class="sheet-link" href="#contact" data-spy><span data-key="nav.con">Kontakt</span><span class="n">06</span></a>
     </nav>
     <div class="sheet-foot">
       <a class="btn btn-primary" href="mailto:mailjanvojvoda@gmail.com">mailjanvojvoda@gmail.com</a>
@@ -974,7 +1130,7 @@
             <p class="eyebrow rv" style="--d:0" data-key="h.eye" data-scramble>Kybernetická bezpečnosť · Slovensko</p>
             <h1 class="rv" style="--d:1" id="h-name">Ján Vojvoda</h1>
             <p class="handle rv" style="--d:2">@janvsec · he/him</p>
-            <p class="lead rv" style="--d:3" data-key="h.bio">Som <strong>18-ročný študent IT</strong> zo Slovenska so zameraním na kybernetickú bezpečnosť – útok aj obranu. Píšem vlastné nástroje, trénujem na TryHackMe a súťažím v CTF.</p>
+            <p class="lead rv" style="--d:3" data-key="h.bio">Som <strong>študent IT</strong> zo Slovenska so zameraním na kybernetickú bezpečnosť – útok aj obranu. Píšem vlastné nástroje, trénujem na TryHackMe a súťažím v CTF.</p>
             <div class="actions rv" style="--d:4">
               <a class="btn btn-primary" href="#contact"><span data-key="h.cta1">Kontaktujte ma</span><span class="arrow" aria-hidden="true">→</span></a>
               <a class="btn" href="#projects" data-key="h.cta2">Pozrieť projekty</a>
@@ -1003,7 +1159,7 @@
           <a class="status-item" href="#results">
             <span class="status-label">TryHackMe</span>
             <span class="status-value" data-key="st.thmv">Top 4 %</span>
-            <span class="status-sub" data-key="st.thms">100+ miestností</span>
+            <span class="status-sub" data-key="st.thms">Platinum liga</span>
           </a>
           <a class="status-item" href="#results">
             <span class="status-label">CyberGame 2026</span>
@@ -1091,22 +1247,52 @@
             <p class="kicker"><span class="idx" data-scramble>02</span><span data-key="k.res">Výsledky</span></p>
             <h2 id="h-res" data-key="s.res.t">Overiteľné výsledky</h2>
           </div>
-          <p class="sec-desc" data-key="s.res.d">Pravidelný tréning na TryHackMe a umiestnenie v národnej CTF súťaži CyberGame.</p>
+          <p class="sec-desc" data-key="s.res.d">Pravidelný tréning na TryHackMe, 2. miesto na Startup Weekend Žilina a umiestnenie v národnej CTF súťaži CyberGame.</p>
         </header>
 
+        <!-- TryHackMe numbers: copy them from your profile and update the "as of" month (data-month) -->
         <article class="panel rv">
           <div class="panel-head">
             <div>
               <h3>TryHackMe</h3>
-              <p data-key="thm.note">SEC0 certifikát · ďalší cieľ SEC1</p>
+              <p><span data-key="thm.note">SEC0 certifikát · ďalší cieľ SEC1</span> · <span data-key="asof">stav k</span> <span data-month="2026-11">nov. 2026</span></p>
             </div>
             <a class="btn btn-sm" href="https://tryhackme.com/p/janvojvoda" target="_blank" rel="noopener noreferrer"><span data-key="thm.btn">Profil</span> ↗</a>
           </div>
           <div class="kpis">
             <div class="kpi"><div class="kpi-val" data-key="t1v" data-scramble>Top 4 %</div><div class="kpi-label" data-key="t1">Globálne poradie</div></div>
-            <div class="kpi"><div class="kpi-val" data-scramble>100+</div><div class="kpi-label" data-key="t2">Miestností</div></div>
-            <div class="kpi"><div class="kpi-val" data-scramble>15+</div><div class="kpi-label" data-key="t3">Odznakov</div></div>
-            <div class="kpi"><div class="kpi-val" data-scramble>60+</div><div class="kpi-label" data-key="t4">Dní v rade</div></div>
+            <div class="kpi"><div class="kpi-val" data-scramble>Platinum</div><div class="kpi-label" data-key="t2">Najvyššia liga</div></div>
+            <div class="kpi"><div class="kpi-val" data-scramble>68</div><div class="kpi-label" data-key="t3">Najdlhšia séria dní</div></div>
+            <div class="kpi"><div class="kpi-val" data-key="t4v" data-scramble>1 963</div><div class="kpi-label" data-key="t4">Aktivít za posledný rok</div></div>
+          </div>
+        </article>
+
+        <!-- Hackathons & other CTFs: copy a .comp row. Use class="badge hot" for a podium place. -->
+        <article class="panel rv">
+          <div class="panel-head">
+            <div>
+              <h3 data-key="oc.t">Hackathony a CTF</h3>
+              <p data-key="oc.d">Startupové a bezpečnostné súťaže</p>
+            </div>
+          </div>
+          <div class="comps">
+            <div class="comp">
+              <span class="badge hot" data-key="oc.b1">2. miesto</span>
+              <span class="comp-main">
+                <span class="comp-name">Startup Weekend Žilina #13</span>
+                <span class="comp-desc" data-key="oc1">54-hodinový startupový maratón. S Jakubom Soskom sme postavili, menili a overovali nápad z kybernetickej bezpečnosti a pitchovali ho pred porotou.</span>
+              </span>
+              <span class="comp-date" data-month="2026-10">okt. 2026</span>
+            </div>
+            <div class="comp">
+              <span class="badge" data-key="oc.b2">Účasť</span>
+              <span class="comp-main">
+                <span class="comp-name">guardians.sk CTF</span>
+                <span class="comp-desc" data-key="oc2">Blue-team CTF výzva od Binary Confidence.</span>
+              </span>
+              <!-- TODO: add the month, e.g. data-month="2026-01" -->
+              <span class="comp-date" data-month=""></span>
+            </div>
           </div>
         </article>
 
@@ -1156,13 +1342,67 @@
         </article>
       </section>
 
+      <!-- ================= Talks & media =================
+           Photos: put the file next to index.html (e.g. in an img/ folder) and fill in the
+           empty src="" of the <img>. While src is empty the photo slot stays hidden.
+           Recommended: landscape JPG/WebP, about 1600×1000 px, under 300 KB. -->
+      <section class="section xc" id="talks" aria-labelledby="h-talk">
+        <header class="sec-head rv">
+          <div>
+            <p class="kicker"><span class="idx" data-scramble>03</span><span data-key="k.talk">Prednášky a médiá</span></p>
+            <h2 id="h-talk" data-key="s.talk.t">Na pódiu aj v hľadisku</h2>
+          </div>
+          <p class="sec-desc" data-key="s.talk.d">Učím mladších, ako byť online bezpečne, a chodím na podujatia, kde sa kyberbezpečnosť robí naozaj.</p>
+        </header>
+
+        <article class="talk rv">
+          <figure class="shot"><img src="" alt="Ján Vojvoda prednáša na podujatí Nehejtujem, dávam lajk v Dolnom Kubíne" data-key-alt="tk.alt" loading="lazy" decoding="async"></figure>
+          <div class="talk-body">
+            <div class="talk-top"><span data-key="tk.type">Prednáška</span><span data-month="2026-04">apr. 2026</span></div>
+            <div>
+              <h3 data-key="tk.t">„Buď online, ale bezpečne“</h3>
+              <p class="talk-where" data-key="tk.where">Nehejtujem, dávam lajk · MsKS Dolný Kubín</p>
+              <p class="talk-desc" data-key="tk.d">Spolu s Tomášom M. sme žiakom ukázali, ako sa správať v online priestore: phishing a online podvody, deepfake a zneužitie AI a prečo si chrániť citlivé údaje. Na reálnych príkladoch, bez zbytočného strašenia.</p>
+              <div class="talk-tags">
+                <span class="pill">Phishing</span>
+                <span class="pill" data-key="tk.g2">Online podvody</span>
+                <span class="pill">Deepfake</span>
+                <span class="pill" data-key="tk.g4">Zneužitie AI</span>
+                <span class="pill" data-key="tk.g5">Ochrana údajov</span>
+              </div>
+            </div>
+            <div class="talk-stats">
+              <div class="talk-stat"><b>350</b><span data-key="tk.s1">žiakov v publiku</span></div>
+              <div class="talk-stat"><b>13–14</b><span data-key="tk.s2">vek žiakov</span></div>
+            </div>
+          </div>
+        </article>
+
+        <div class="proj-grid two rv">
+          <a class="proj" href="https://radlinskeho.sk/nehejtujem-davam-lajk-2/" target="_blank" rel="noopener noreferrer">
+            <figure class="shot"><img src="" alt="Fotografia z podujatia Nehejtujem, dávam lajk" data-key-alt="md.alt" loading="lazy" decoding="async"></figure>
+            <div class="proj-meta"><span data-key="md.type">V médiách</span><span data-month="2026-05">máj 2026</span></div>
+            <h3 class="proj-name">NEHEJTUJEM, DÁVAM LAJK!</h3>
+            <p class="proj-desc" data-key="md.d">Článok mojej školy o podujatí, na ktorom sme s Tomášom M. prednášali.</p>
+            <div class="proj-foot"><span>radlinskeho.sk</span><span class="proj-go" data-key="md.go">Čítať článok ↗</span></div>
+          </a>
+          <article class="proj">
+            <figure class="shot"><img src="" alt="Konferencia Kyber 2026 Jeseň v Novom Smokovci" data-key-alt="ev1.alt" loading="lazy" decoding="async"></figure>
+            <div class="proj-meta"><span data-key="ev.type">Konferencia</span><span data-month="2026-09">sep. 2026</span></div>
+            <h3 class="proj-name">Kyber 2026 Jeseň</h3>
+            <p class="proj-desc" data-key="ev1.d">CTF workshop so Slovak Cyber Team s úlohami naprieč oblasťami kyberbezpečnosti. Druhý deň prednášky, panely a CyberExpo o pentestingu, kybernetickej odolnosti a budúcich hrozbách.</p>
+            <div class="proj-foot"><span>Nový Smokovec</span><span>CTF · Slovak Cyber Team</span></div>
+          </article>
+        </div>
+      </section>
+
       <!-- ================= Certifications =================
            To add one: copy a row. Use <a class="cert" href="…"> when it can be verified online,
            <div class="cert"> otherwise. The counts in the pills update automatically. -->
       <section class="section xc" id="certs" aria-labelledby="h-cert">
         <header class="sec-head rv">
           <div>
-            <p class="kicker"><span class="idx" data-scramble>03</span><span data-key="k.cert">Certifikáty</span></p>
+            <p class="kicker"><span class="idx" data-scramble>04</span><span data-key="k.cert">Certifikáty</span></p>
             <h2 id="h-cert" data-key="s.cert.t">Certifikáty a kurzy</h2>
           </div>
           <p class="sec-desc" data-key="s.cert.d">Kurzy od Cisco, EC-Council, TryHackMe a slovenského certifikačného centra. Väčšinu si môžete overiť online.</p>
@@ -1238,7 +1478,7 @@
       <section class="section xc" id="experience" aria-labelledby="h-exp">
         <header class="sec-head rv">
           <div>
-            <p class="kicker"><span class="idx" data-scramble>04</span><span data-key="k.exp">Prax</span></p>
+            <p class="kicker"><span class="idx" data-scramble>05</span><span data-key="k.exp">Prax</span></p>
             <h2 id="h-exp" data-key="s.exp.t">Prax a vzdelanie</h2>
           </div>
           <p class="sec-desc" data-key="s.exp.d">Kde pracujem a študujem.</p>
@@ -1264,6 +1504,12 @@
             <h3>Cirkevná spojená škola Dolný Kubín</h3>
             <p class="xp-org" data-key="e.deg">Informačné technológie</p>
             <p class="xp-meta" data-key="e.status">Štúdium prebieha</p>
+            <ul class="bullets">
+              <li data-key="e.b1">Základy IT</li>
+              <li data-key="e.b2">Počítačové siete v Cisco Networking Academy</li>
+              <li data-key="e.b3">Programovanie v Pythone</li>
+              <li data-key="e.b4">Weby v HTML a jednoduché stránky vo WordPresse</li>
+            </ul>
             <div class="xp-tags">
               <span class="pill">IT</span>
               <span class="pill" data-key="tg.sec">Kybernetická bezpečnosť</span>
@@ -1277,7 +1523,7 @@
       <section class="section xc" id="contact" aria-labelledby="h-con">
         <div class="contact-grid">
           <div class="rv">
-            <p class="kicker"><span class="idx" data-scramble>05</span><span data-key="k.con">Kontakt</span></p>
+            <p class="kicker"><span class="idx" data-scramble>06</span><span data-key="k.con">Kontakt</span></p>
             <h2 class="contact-title" id="h-con" data-key="con.t">Ozvite sa.</h2>
             <p class="contact-desc" data-key="con.d">Najrýchlejšie ma zastihnete e-mailom alebo cez LinkedIn. Na citlivé správy použite môj PGP kľúč.</p>
             <div class="email-row">
@@ -1356,7 +1602,6 @@ jXVr0CMDZh544Qs=
       <div class="wordmark" id="wordmark" aria-hidden="true"><canvas id="wordmarkCanvas"></canvas></div>
       <div class="foot-row">
         <span>© <span id="yr">2026</span> Ján Vojvoda</span>
-        <a class="mono" href="#pgp">PGP 9403 63F8</a>
         <a href="#top" data-key="f.top">Späť hore ↑</a>
       </div>
     </div>
@@ -1467,11 +1712,11 @@ jXVr0CMDZh544Qs=
         en: {
           'doc.title': 'Ján Vojvoda (janvsec) · Cybersecurity',
           'skip': 'Skip to content',
-          'nav.proj': 'Projects', 'nav.res': 'Results', 'nav.cert': 'Certifications', 'nav.exp': 'Experience', 'nav.con': 'Contact',
+          'nav.proj': 'Projects', 'nav.res': 'Results', 'nav.talk': 'Talks', 'nav.cert': 'Certifications', 'nav.exp': 'Experience', 'nav.con': 'Contact',
           'h.eye': 'Cybersecurity · Slovakia',
-          'h.bio': 'I’m an <strong>18-year-old IT student</strong> from Slovakia focused on cybersecurity – both offense and defense. I build my own tools, train on TryHackMe and compete in CTFs.',
+          'h.bio': 'I’m an <strong>IT student</strong> from Slovakia focused on cybersecurity – both offense and defense. I build my own tools, train on TryHackMe and compete in CTFs.',
           'h.cta1': 'Get in touch', 'h.cta2': 'View projects',
-          'st.loc': 'Location', 'st.now': 'Currently', 'st.thmv': 'Top 4%', 'st.thms': '100+ rooms',
+          'st.loc': 'Location', 'st.now': 'Currently', 'st.thmv': 'Top 4%', 'st.thms': 'Platinum league',
           'u.pts': ['{n} point', '{n} points'],
           'n.1': 'Identify', 'n.2': 'Protect', 'n.3': 'Detect', 'n.4': 'Respond', 'n.5': 'Recover',
           'k.proj': 'Projects', 's.proj.t': 'Tools I’ve built',
@@ -1485,9 +1730,26 @@ jXVr0CMDZh544Qs=
           'p5': 'ESP32-based tripwire monitoring system connected to a web API.',
           'p6': 'Lightweight network scanner for discovering devices on a subnet.',
           'k.res': 'Results', 's.res.t': 'Verifiable results',
-          's.res.d': 'Regular training on TryHackMe and a placement in Slovakia’s national CyberGame CTF.',
-          'thm.note': 'SEC0 certified · working toward SEC1', 'thm.btn': 'Profile',
-          't1v': 'Top 4%', 't1': 'Global rank', 't2': 'Rooms', 't3': 'Badges', 't4': 'Day streak',
+          's.res.d': 'Regular training on TryHackMe, 2nd place at Startup Weekend Žilina and a placement in Slovakia’s national CyberGame CTF.',
+          'thm.note': 'SEC0 certified · working toward SEC1', 'thm.btn': 'Profile', 'asof': 'as of',
+          't1v': 'Top 4%', 't1': 'Global rank', 't2': 'Highest league', 't3': 'Longest streak (days)', 't4v': '1,963', 't4': 'Activities in the past year',
+          'oc.t': 'Hackathons & CTFs', 'oc.d': 'Startup and security competitions',
+          'oc.b1': '2nd place', 'oc.b2': 'Participant',
+          'oc1': 'A 54-hour startup marathon. With Jakub Soska, I built, reshaped and tested a cybersecurity business idea and pitched it to the jury.',
+          'oc2': 'Blue-team CTF challenge by Binary Confidence.',
+          'k.talk': 'Talks & media', 's.talk.t': 'On stage and in the audience',
+          's.talk.d': 'I teach younger students how to stay safe online and go to events where cybersecurity is done for real.',
+          'tk.type': 'Talk', 'tk.t': '“Be online, but stay safe”',
+          'tk.where': 'Nehejtujem, dávam lajk (anti-hate event) · Dolný Kubín',
+          'tk.d': 'Together with Tomáš M., I showed pupils how to behave online: phishing and online scams, deepfakes and AI misuse, and why sensitive data needs protecting. Real examples, no scaremongering.',
+          'tk.g2': 'Online scams', 'tk.g4': 'AI misuse', 'tk.g5': 'Data protection',
+          'tk.s1': 'pupils in the audience', 'tk.s2': 'age of the pupils',
+          'tk.alt': 'Ján Vojvoda giving a talk at Nehejtujem, dávam lajk in Dolný Kubín',
+          'md.type': 'In the media', 'md.d': 'My school’s article about the event where Tomáš M. and I gave our talk.', 'md.go': 'Read article ↗',
+          'md.alt': 'Photo from the Nehejtujem, dávam lajk event',
+          'ev.type': 'Conference',
+          'ev1.d': 'A CTF workshop with Slovak Cyber Team, with challenges across security fields. Day two brought talks, panels and CyberExpo on pentesting, cyber resilience and future threats.',
+          'ev1.alt': 'Kyber 2026 Jeseň conference in Nový Smokovec',
           'ctf.sub': 'National CTF competition · Slovakia',
           'ctf.k1': 'Rank', 'ctf.k2': 'Points', 'ctf.k3': 'Challenges solved', 'ctf.k4v': '56%', 'ctf.k4': 'Success rate',
           'ctf.chart': 'Points over time', 'ctf.chartn': 'May 5 – 9, 2026',
@@ -1517,6 +1779,10 @@ jXVr0CMDZh544Qs=
           'ex.b5': 'Identifying phishing attempts and common security risks',
           'ex.b6': 'Hardware setup and maintenance',
           'e.deg': 'Information Technology', 'e.status': 'In progress', 'tg.sec': 'Cybersecurity',
+          'e.b1': 'IT fundamentals',
+          'e.b2': 'Computer networking with Cisco Networking Academy',
+          'e.b3': 'Programming in Python',
+          'e.b4': 'Websites in HTML and simple sites in WordPress',
           'k.con': 'Contact', 'con.t': 'Get in touch.',
           'con.d': 'Email or LinkedIn is the quickest way to reach me. For anything sensitive, use my PGP key.',
           'con.copy': 'Copy', 'con.copied': 'Copied ✓',
@@ -1555,6 +1821,10 @@ jXVr0CMDZh544Qs=
         const k = el.getAttribute('data-key');
         if (T.sk[k] !== undefined) return;
         T.sk[k] = el.children.length ? el.innerHTML.trim() : el.textContent.replace(/\s+/g, ' ').trim();
+      });
+      $$('[data-key-alt]').forEach(el => {
+        const k = el.getAttribute('data-key-alt');
+        if (T.sk[k] === undefined) T.sk[k] = el.getAttribute('alt') || '';
       });
 
       let lang = 'sk';
@@ -1780,6 +2050,7 @@ jXVr0CMDZh544Qs=
       function renderMonths() {
         $$('[data-month]').forEach(el => {
           const p = el.getAttribute('data-month').split('-').map(Number);
+          if (!p[0] || !p[1]) return;
           el.textContent = fmtMonthYear(p[0], p[1] - 1);
         });
       }
@@ -1806,6 +2077,7 @@ jXVr0CMDZh544Qs=
           if (v === undefined || Array.isArray(v)) return;
           if (v.indexOf('<') > -1) el.innerHTML = v; else el.textContent = v;
         });
+        $$('[data-key-alt]').forEach(el => { el.alt = tr(el.getAttribute('data-key-alt')); });
         $('#skBtn').setAttribute('aria-pressed', l === 'sk');
         $('#enBtn').setAttribute('aria-pressed', l === 'en');
         renderCounts();
@@ -1876,7 +2148,7 @@ jXVr0CMDZh544Qs=
         const spy = new IntersectionObserver(entries => {
           entries.forEach(e => { if (e.isIntersecting) setActive(e.target.id); });
         }, { rootMargin: '-45% 0px -50% 0px' });
-        ['top', 'projects', 'results', 'certs', 'experience', 'contact'].forEach(id => { const el = document.getElementById(id); if (el) spy.observe(el); });
+        ['top', 'projects', 'results', 'talks', 'certs', 'experience', 'contact'].forEach(id => { const el = document.getElementById(id); if (el) spy.observe(el); });
       }
 
       /* =====================================================
@@ -2717,6 +2989,41 @@ jXVr0CMDZh544Qs=
           others.forEach(el => el.classList.add('in'));
         }
       }
+
+      /* =====================================================
+         Photo slots: an empty or broken src keeps the slot hidden
+         ===================================================== */
+      $$('.shot').forEach(fig => {
+        const img = $('img', fig), talk = fig.closest('.talk');
+        const hide = () => { fig.hidden = true; if (talk) talk.classList.remove('has-shot'); };
+        if (!img || !img.getAttribute('src') || (img.complete && !img.naturalWidth)) { hide(); return; }
+        if (talk) talk.classList.add('has-shot');
+        img.addEventListener('error', hide);
+      });
+
+      /* =====================================================
+         Cards: red spotlight follows the mouse, index number scrambles on hover
+         ===================================================== */
+      const SPOT = '.proj, .cert, .talk, .comp';
+      document.addEventListener('pointermove', e => {
+        if (e.pointerType !== 'mouse') return;
+        const card = e.target.closest && e.target.closest(SPOT);
+        if (!card) return;
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', Math.round(e.clientX - r.left) + 'px');
+        card.style.setProperty('--my', Math.round(e.clientY - r.top) + 'px');
+      }, { passive: true });
+      document.addEventListener('pointerover', e => {
+        if (e.pointerType !== 'mouse') return;
+        const card = e.target.closest && e.target.closest('.proj');
+        if (!card || card.contains(e.relatedTarget)) return;
+        const n = $('.proj-meta > span:first-child', card);
+        if (!n || n._busy || n.hasAttribute('data-key') || n.hasAttribute('data-month')) return;
+        n._busy = true;
+        n._scrambled = false;
+        scramble(n);
+        setTimeout(() => { n._busy = false; }, 650);
+      });
     })();
   </script>
 </body>

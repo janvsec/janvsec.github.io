@@ -13,6 +13,7 @@ Personal portfolio of Ján Vojvoda (janvsec). Plain HTML, CSS and JavaScript –
 | `favicon.svg`, `favicon-32.png`, `apple-touch-icon.png` | Browser and home-screen icons |
 | `robots.txt`, `sitemap.xml` | For search engines |
 | `CNAME` | Custom domain for GitHub Pages – keep this file |
+| `img/` | Your photos for the Talks & media section (create it when you add the first one) |
 
 ## Editing content
 
@@ -25,6 +26,14 @@ Everything below is in `index.html`.
 **Add a certificate.** Copy a row in the Certifications list. Use `<a class="cert" href="…">` when it can be verified online and `<div class="cert">` when it can't. The counts above the list update automatically.
 
 **CTF results.** `CONFIG.ctf.solves` lists every solve. The points total, solve count, chart, category breakdown and table are all calculated from it. The rank (`#41`) and success rate are typed in the HTML.
+
+**TryHackMe numbers.** Typed in the HTML (Results section). When you update them, also change the "as of" month next to them (`data-month="YYYY-MM"`).
+
+**Hackathons and other CTFs.** Copy a `<div class="comp">` row in the Results section. Use `class="badge hot"` (red) for a podium place and plain `class="badge"` otherwise. Add the English description to `T.en`.
+
+**Talks and media.** The talk is the `<article class="talk">` block; events and articles are cards in the grid below it. A card that links somewhere is `<a class="proj" href="…">`, one without a link is `<article class="proj">`. Add new English texts to `T.en`.
+
+**Photos.** Every talk/event card has an empty photo slot: `<img src="" …>`. Put the picture next to `index.html` (for example `img/nehejtujem-2026.jpg`) and fill in `src="img/nehejtujem-2026.jpg"`. While `src` is empty, or the file can't be found, the slot stays hidden. Use landscape photos around 1600×1000 px and keep them under ~300 KB (JPG or WebP). The `alt` text describes the photo for screen readers; its English version is the `data-key-alt` key in `T.en`.
 
 **Globe.** `CONFIG.globe` sets the home location and its label, the rotation speed and tilt, how often attacks fire, the share aimed at home (always blocked) and the list of cities.
 
