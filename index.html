@@ -211,42 +211,8 @@
     }
     .btn:hover { background: rgba(255, 255, 255, .05); border-color: var(--line-3); }
     .btn:active { transform: translateY(1px); }
-    /* Glossy white: bright top half, soft grey bottom half, light sheen sweeps across on hover */
-    .btn-primary {
-      position: relative;
-      overflow: hidden;
-      isolation: isolate;
-      color: #0a0a0b;
-      border-color: rgba(255, 255, 255, .9);
-      background: linear-gradient(180deg, #ffffff 0%, #f4f4f6 49%, #e6e6ea 51%, #d9d9de 100%);
-      box-shadow:
-        inset 0 1px 0 #fff,
-        inset 0 -1px 0 rgba(0, 0, 0, .1),
-        0 1px 2px rgba(0, 0, 0, .5),
-        0 8px 22px -10px rgba(255, 255, 255, .35);
-    }
-    .btn-primary::after {
-      content: '';
-      position: absolute;
-      z-index: -1;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      width: 45%;
-      background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .95), transparent);
-      transform: translateX(-130%) skewX(-18deg);
-      pointer-events: none;
-    }
-    .btn-primary:hover {
-      border-color: #fff;
-      background: linear-gradient(180deg, #ffffff 0%, #f9f9fa 49%, #ececf0 51%, #e2e2e6 100%);
-      box-shadow:
-        inset 0 1px 0 #fff,
-        inset 0 -1px 0 rgba(0, 0, 0, .1),
-        0 1px 2px rgba(0, 0, 0, .5),
-        0 10px 28px -10px rgba(255, 255, 255, .5);
-    }
-    .btn-primary:hover::after { transform: translateX(280%) skewX(-18deg); transition: transform .75s var(--ease); }
+    .btn-primary { background: var(--text); border-color: var(--text); color: #0a0a0b; }
+    .btn-primary:hover { background: #fff; border-color: #fff; }
     .btn-sm { height: 36px; padding: 0 14px; font-size: 14px; border-radius: 8px; }
     .btn .arrow { transition: transform .2s var(--ease); }
     .btn:hover .arrow { transform: translateX(3px); }
@@ -1622,7 +1588,8 @@ jXVr0CMDZh544Qs=
         email: 'mailjanvojvoda@gmail.com',
 
         globe: {
-          home: { lat: 49.21, lon: 19.30, label: 'DOLNÝ KUBÍN', coords: '49.21°N 19.30°E' },
+          // the blue home marker: position (centre of Slovakia), its label per language, and the line under it
+          home: { lat: 48.67, lon: 19.70, label: { sk: 'SLOVENSKO', en: 'SLOVAKIA' }, coords: '48.67°N 19.70°E' },
           startLon: 35,        // longitude facing the viewer when the page loads
           tilt: 0.38,          // radians – how much of the northern hemisphere faces you
           spin: 0.09,          // auto-rotation, radians per second
@@ -2677,7 +2644,7 @@ jXVr0CMDZh544Qs=
           }
           if (homeZ > 0.02) {
             const fadeIn = smooth(0.02, 0.3, homeZ);
-            const t1 = G.home.label, t2 = G.home.coords;
+            const L = G.home.label, t1 = typeof L === 'string' ? L : (L[lang] || L.en), t2 = G.home.coords;
             ctx.save();
             ctx.globalAlpha = fadeIn;
             ctx.font = '500 ' + labelFs + 'px "IBM Plex Mono", ui-monospace, monospace';
