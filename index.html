@@ -103,7 +103,7 @@
       --line-3: rgba(255, 255, 255, .22);
       --text: #ededef;
       --text-2: #a3a3ab;
-      --text-3: #7b7b84;
+      --text-3: #8b8b94;
 
       --red: #ff4d5a;   /* primary – attack */
       --blue: #4c9dff;  /* secondary – defense */
@@ -122,6 +122,7 @@
       --frame: 1200px;
       --pad: 48px;
       --nav-h: 64px;
+      --jump-h: 0px; /* section shortcut bar under the nav (phones only) */
       --r: 12px;
       --ease: cubic-bezier(.2, .7, .2, 1);
     }
@@ -132,7 +133,7 @@
       background: var(--bg);
       color-scheme: dark;
       scroll-behavior: smooth;
-      scroll-padding-top: calc(var(--nav-h) + 8px);
+      scroll-padding-top: calc(var(--nav-h) + var(--jump-h) + 8px);
       -webkit-text-size-adjust: 100%;
     }
 
@@ -250,6 +251,7 @@
     .brand { font-family: var(--mono); font-size: 14px; font-weight: 500; flex-shrink: 0; }
     .brand .tilde { color: var(--text-3); }
 
+    .jump { display: none; }
     .nav-links { display: flex; gap: 2px; }
     .nav-links a {
       font-size: 14px;
@@ -352,7 +354,7 @@
       flex-direction: column;
       min-height: 100vh;
       min-height: min(100svh, 1000px);
-      padding-top: var(--nav-h);
+      padding-top: calc(var(--nav-h) + var(--jump-h));
       pointer-events: none;
     }
     .hero-copy, .status { pointer-events: auto; }
@@ -360,7 +362,7 @@
     .hero-grid {
       flex: 1;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr);
       align-items: center;
       gap: 32px;
       padding: 48px var(--pad) 56px;
@@ -382,13 +384,9 @@
     .quick a:hover { color: var(--text); }
     .og-only { display: none; }
 
-    .globe-slot {
-      position: relative;
-      width: 100%;
-      max-width: 580px;
-      aspect-ratio: 1 / 1;
-      justify-self: end;
-    }
+    /* globe removed: the slot takes no space, the copy sits on the flowing field */
+    .globe-slot { display: none; }
+    .hero-copy { max-width: 640px; }
 
     .status {
       position: relative;
@@ -451,8 +449,20 @@
       align-items: end;
       margin-bottom: 52px;
     }
-    .kicker { display: flex; gap: 12px; font-family: var(--mono); font-size: 13px; color: var(--text-2); margin-bottom: 16px; }
-    .kicker .idx { color: var(--red); }
+    /* Section label: red, uppercase, spaced out, so each section start is easy to spot */
+    .kicker {
+      display: flex;
+      gap: 10px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 16px;
+    }
+    .kicker .idx { color: var(--red); opacity: .65; }
+    .sec-pin { display: none; } /* phones only, see the responsive block */
     .sec-head h2 {
       font-size: clamp(2rem, 3.8vw, 3rem);
       font-weight: 600;
@@ -879,8 +889,6 @@
     .wordmark canvas {
       width: 100%;
       height: 0;
-      -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
-      mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
     }
     .foot-row {
       display: flex;
@@ -946,8 +954,7 @@
       .menu-btn { display: block; }
 
       .hero-frame { min-height: 0; }
-      .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 16px var(--pad) 44px; align-items: start; }
-      .globe-slot { order: -1; justify-self: center; width: min(100%, 380px); }
+      .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 40px var(--pad) 44px; align-items: start; }
       .hero h1 { font-size: clamp(2.75rem, 12.5vw, 4.5rem); }
       .lead { font-size: 1.0625rem; margin-top: 22px; }
       .actions { margin-top: 28px; }
@@ -1007,12 +1014,85 @@
       .pgp-key pre { padding: 14px 18px; font-size: 11px; }
 
       .wordmark { padding-top: 48px; }
-    }
 
-    /* Phones held sideways: globe beside the text instead of above it */
-    @media (max-width: 899px) and (min-width: 560px) and (orientation: landscape) {
-      .hero-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); align-items: center; gap: 24px; }
-      .globe-slot { order: 0; width: 100%; max-width: 360px; justify-self: end; }
+      /* Section shortcut bar: a second row in the fixed nav, always one tap away */
+      :root { --jump-h: 48px; }
+      .nav, .nav.scrolled { height: auto; background: rgba(9, 9, 10, .94); border-bottom-color: var(--line); }
+      .nav-inner { height: var(--nav-h); }
+      .jump {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: var(--jump-h);
+        padding: 0 var(--pad) 6px;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .jump::-webkit-scrollbar { display: none; }
+      .jump a {
+        flex: none;
+        padding: 7px 14px;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.2;
+        color: var(--text-2);
+        border: 1px solid var(--line-2);
+        border-radius: 999px;
+        transition: color .15s, background .15s, border-color .15s;
+      }
+      .jump a[aria-current="true"] { color: #0a0a0b; background: var(--text); border-color: var(--text); }
+      .menu-open .jump { display: none; }
+
+      /* Clearer sections: more room, alternating background, stronger divider */
+      .section { padding: 0 var(--pad); border-top-color: var(--line-2); }
+      #results, #certs, #contact { background: var(--bg-1); }
+
+      /* "You are here" label: each section's name sticks under the shortcut bar while
+         you're inside it and gets pushed away by the next one, like a phone's contact list */
+      .sec-pin {
+        position: sticky;
+        top: calc(var(--nav-h) + var(--jump-h));
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 42px;
+        margin: 0 calc(var(--pad) * -1) 44px;
+        padding: 0 var(--pad);
+        background: var(--bg);
+        border-bottom: 1px solid var(--line-2);
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--red);
+      }
+      .sec-pin .idx { opacity: .65; }
+      #results .sec-pin, #certs .sec-pin, #contact .sec-pin { background: var(--bg-1); }
+      .section .kicker { display: none; } /* the pinned label already says it */
+      /* bottom spacing as an in-flow spacer, so the pinned label stays until the next section */
+      .section.xc::after {
+        content: '';
+        display: block;
+        position: static;
+        width: auto;
+        height: 84px;
+        background: none;
+      }
+      .sec-head { margin-bottom: 36px; }
+      .sec-desc { font-size: 16.5px; }
+
+      /* Cards as separate boxes instead of one joined block */
+      .proj-grid, .proj-grid.two { gap: 14px; background: none; border: 0; border-radius: 0; overflow: visible; }
+      .proj { border: 1px solid var(--line-2); border-radius: var(--r); overflow: hidden; background: var(--bg-1); }
+      .panel, .talk, .xp, .cert-list { border-color: var(--line-2); }
+      .panel + .panel { margin-top: 16px; }
+
+      /* Slightly larger reading text */
+      .proj-desc, .bullets li { font-size: 16px; }
+      .panel-head p { font-size: 15.5px; }
+      .proj-meta, .proj-foot, .xp-top { font-size: 13px; }
     }
 
     @media (max-width: 599px) {
@@ -1064,6 +1144,14 @@
         <button type="button" class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="sheet" aria-label="Menu"><span></span><span></span></button>
       </div>
     </div>
+    <nav class="jump" id="jump" aria-label="Sections">
+      <a href="#projects" data-spy data-key="nav.proj">Projekty</a>
+      <a href="#results" data-spy data-key="nav.res">Výsledky</a>
+      <a href="#talks" data-spy data-key="nav.talk">Prednášky</a>
+      <a href="#certs" data-spy data-key="nav.cert">Certifikáty</a>
+      <a href="#experience" data-spy data-key="nav.exp">Prax</a>
+      <a href="#contact" data-spy data-key="nav.con">Kontakt</a>
+    </nav>
   </header>
 
   <div class="sheet" id="sheet">
@@ -1155,6 +1243,7 @@
            To add a project: copy one <a class="proj"> block, then add its
            English texts (pcN = category, pN = description) to T.en in the script. -->
       <section class="section xc" id="projects" aria-labelledby="h-proj">
+        <div class="sec-pin" aria-hidden="true"><span class="idx">01</span><span data-key="k.proj">Projekty</span></div>
         <header class="sec-head rv">
           <div>
             <p class="kicker"><span class="idx" data-scramble>01</span><span data-key="k.proj">Projekty</span></p>
@@ -1208,6 +1297,7 @@
 
       <!-- ================= Results ================= -->
       <section class="section xc" id="results" aria-labelledby="h-res">
+        <div class="sec-pin" aria-hidden="true"><span class="idx">02</span><span data-key="k.res">Výsledky</span></div>
         <header class="sec-head rv">
           <div>
             <p class="kicker"><span class="idx" data-scramble>02</span><span data-key="k.res">Výsledky</span></p>
@@ -1313,6 +1403,7 @@
            empty src="" of the <img>. While src is empty the photo slot stays hidden.
            Recommended: landscape JPG/WebP, about 1600×1000 px, under 300 KB. -->
       <section class="section xc" id="talks" aria-labelledby="h-talk">
+        <div class="sec-pin" aria-hidden="true"><span class="idx">03</span><span data-key="k.talk">Prednášky a médiá</span></div>
         <header class="sec-head rv">
           <div>
             <p class="kicker"><span class="idx" data-scramble>03</span><span data-key="k.talk">Prednášky a médiá</span></p>
@@ -1366,6 +1457,7 @@
            To add one: copy a row. Use <a class="cert" href="…"> when it can be verified online,
            <div class="cert"> otherwise. The counts in the pills update automatically. -->
       <section class="section xc" id="certs" aria-labelledby="h-cert">
+        <div class="sec-pin" aria-hidden="true"><span class="idx">04</span><span data-key="k.cert">Certifikáty</span></div>
         <header class="sec-head rv">
           <div>
             <p class="kicker"><span class="idx" data-scramble>04</span><span data-key="k.cert">Certifikáty</span></p>
@@ -1442,6 +1534,7 @@
 
       <!-- ================= Experience ================= -->
       <section class="section xc" id="experience" aria-labelledby="h-exp">
+        <div class="sec-pin" aria-hidden="true"><span class="idx">05</span><span data-key="k.exp">Prax</span></div>
         <header class="sec-head rv">
           <div>
             <p class="kicker"><span class="idx" data-scramble>05</span><span data-key="k.exp">Prax</span></p>
@@ -1487,6 +1580,7 @@
 
       <!-- ================= Contact ================= -->
       <section class="section xc" id="contact" aria-labelledby="h-con">
+        <div class="sec-pin" aria-hidden="true"><span class="idx">06</span><span data-key="k.con">Kontakt</span></div>
         <div class="contact-grid">
           <div class="rv">
             <p class="kicker"><span class="idx" data-scramble>06</span><span data-key="k.con">Kontakt</span></p>
@@ -2104,17 +2198,23 @@ jXVr0CMDZh544Qs=
         if (a.classList.contains('skip')) { target.setAttribute('tabindex', '-1'); target.focus({ preventScroll: true }); }
       });
 
-      const spyLinks = $$('[data-spy]');
+      const spyLinks = $$('[data-spy]'), jump = $('#jump');
       function setActive(id) {
         spyLinks.forEach(a => {
-          if (a.getAttribute('href') === '#' + id) a.setAttribute('aria-current', 'true');
-          else a.removeAttribute('aria-current');
+          if (a.getAttribute('href') === '#' + id) {
+            a.setAttribute('aria-current', 'true');
+            // keep the active shortcut visible in the sideways-scrolling bar on phones
+            if (jump && a.parentNode === jump && jump.scrollWidth > jump.clientWidth) {
+              jump.scrollTo({ left: Math.max(0, a.offsetLeft - 16), behavior: reduced ? 'auto' : 'smooth' });
+            }
+          } else a.removeAttribute('aria-current');
         });
       }
       if ('IntersectionObserver' in window) {
         const spy = new IntersectionObserver(entries => {
           entries.forEach(e => { if (e.isIntersecting) setActive(e.target.id); });
-        }, { rootMargin: '-45% 0px -50% 0px' });
+        // phones: switch right when a section's label pins under the shortcut bar, so both always agree
+        }, { rootMargin: window.innerWidth < 900 ? '-110px 0px -75% 0px' : '-45% 0px -50% 0px' });
         ['top', 'projects', 'results', 'talks', 'certs', 'experience', 'contact'].forEach(id => { const el = document.getElementById(id); if (el) spy.observe(el); });
       }
 
@@ -2437,14 +2537,14 @@ jXVr0CMDZh544Qs=
             const py = y * ch + ch * 0.5;
             const vb = 1 - smooth(stTop - 150, stTop - 14, py);
             const vt = 0.35 + 0.65 * smooth(0, 150, py);
-            const vm = narrow ? 1 - smooth(cTop - 80, cTop + 8, py) : 1;
             for (let x = 0; x < cols; x++) {
               const px = x * cw + cw * 0.5;
-              const d = Math.hypot(px - gcx, py - gcy) / gR;
-              const hx = narrow ? 1 : 0.1 + 0.9 * smooth(cRight - 220, cRight + 160, px);
+              // phones: field runs behind the text, a bit stronger towards the right edge
+              // desktop: faint behind the copy, full strength to the right of it
+              const hx = narrow ? 0.4 + 0.6 * smooth(W * 0.15, W * 0.95, px) : 0.18 + 0.82 * smooth(cRight - 160, cRight + 120, px);
               const i = y * cols + x;
-              fmask[i] = hx * vb * vt * vm * smooth(1.12, 1.9, d) * (narrow ? 0.45 : 0.52);
-              gmask[i] = vb * vm * smooth(1.02, 1.25, d) * (narrow ? 0.55 : 0.7);
+              fmask[i] = hx * vb * vt * (narrow ? 0.62 : 0.78);
+              gmask[i] = vb * (narrow ? 0.55 : 0.7);
             }
           }
 
@@ -2483,7 +2583,6 @@ jXVr0CMDZh544Qs=
           }
           const now = performance.now();
           setRotation();
-          if (ogMode) stageOg(now);
           draw(now);
           canvas.classList.add('ready');
         }
@@ -2517,13 +2616,9 @@ jXVr0CMDZh544Qs=
             nextAmbient = now + 6000 + Math.random() * 4000;
           }
           for (let k = ripples.length - 1; k >= 0; k--) if (now - ripples[k].t0 > 2300) ripples.splice(k, 1);
-          if (live && now > nextAttack) {
-            spawnAttack(now);
-            nextAttack = now + G.attackEvery * (Quality.tier === 2 ? 1 : 1.6) * (0.5 + Math.random());
-          }
 
           // 1) flowing field + cursor glow + ripples
-          const drift = t * 0.03, zf = t * 0.06, zf2 = t * 0.1 + 10;
+          const drift = t * 0.075, zf = t * 0.16, zf2 = t * 0.26 + 10;
           const pr = narrow ? 90 : 140, pr2 = 2 * pr * pr;
           const pAmp = ptr.amp * (0.18 + 0.5 * ptr.energy);
           const rw2 = 2 * 22 * 22, nR = ripples.length;
@@ -2551,30 +2646,12 @@ jXVr0CMDZh544Qs=
             }
           }
 
-          // 2) atmosphere halo + globe
-          for (let k = 0; k < hN; k++) { const i = hI[k]; if (hV[k] > lev[i]) lev[i] = hV[k]; }
-          for (let k = 0; k < gN; k++) {
-            const x = gX[k], y = gY[k], z = gZ[k];
-            const y1 = y * ct + z * st, z1 = z * ct - y * st;
-            const gx = x * cs - z1 * ss, gz = x * ss + z1 * cs;
-            const lat = Math.asin(y1 > 1 ? 1 : y1 < -1 ? -1 : y1), lon = Math.atan2(gx, gz);
-            let v;
-            if (isLand(lat, lon)) v = 0.24 + 0.76 * gD[k];
-            else {
-              const la = lat * R2D, lo = lon * R2D;
-              const grid = Math.abs(la - 20 * Math.round(la / 20)) < 1.4 || Math.abs(lo - 20 * Math.round(lo / 20)) * Math.cos(lat) < 1.4;
-              v = (grid ? 0.12 + 0.2 * gD[k] : 0.06 + 0.1 * gD[k]) + gS[k];
-            }
-            v = v * gL[k] + gRm[k];
-            if (v < 0.1) v = 0.1; // every cell on the disc keeps at least a dot, so the sphere reads clearly
-            lev[gI[k]] = v >= 1 ? NL - 1 : Math.round(v * (NL - 1));
-          }
+          // 2) globe removed – only the flowing field is drawn
 
-          // 3) overlay: attacks (red), defense (blue), home node
+          // 3) overlay (ripples only now that the globe is gone)
           for (let k = 0; k < ovl.length; k++) ov[ovl[k]] = 0;
           ovl.length = 0;
-          project(HOME, pv);
-          const homeZ = pv[2], hx = gcx + pv[0] * gR, hy = gcy - pv[1] * gR;
+          const homeZ = -1, hx = 0, hy = 0;
 
           for (let a = arcs.length - 1; a >= 0; a--) {
             const A = arcs[a], p = (now - A.t0) / A.dur;
@@ -2679,11 +2756,7 @@ jXVr0CMDZh544Qs=
           const r = canvas.getBoundingClientRect();
           const x = e.clientX - r.left, y = e.clientY - r.top;
           lastInteract = performance.now();
-          if (Math.hypot(x - gcx, y - gcy) < gR * 1.08) {
-            dragging = true; dragId = e.pointerId; lx = x; ly = y; lt = performance.now(); spinVel = 0;
-            try { canvas.setPointerCapture(e.pointerId); } catch (_) { }
-            canvas.style.cursor = 'grabbing';
-          } else if (Quality.tier > 0) {
+          if (Quality.tier > 0) {
             ripples.push({ x: x, y: y, t0: performance.now(), a: 0.7 });
           }
           wake();
@@ -2698,8 +2771,6 @@ jXVr0CMDZh544Qs=
             spinVel = spinVel * 0.5 + (dx / gR / dts) * 0.5;
             lx = x; ly = y; lt = now;
             if (Quality.tier === 0) draw(now);
-          } else {
-            canvas.style.cursor = Math.hypot(x - gcx, y - gcy) < gR * 1.08 ? 'grab' : '';
           }
         });
         const endDrag = e => {
@@ -2781,9 +2852,7 @@ jXVr0CMDZh544Qs=
           base = new Float32Array(cols * rows);
           grp = new Uint8Array(cols);
           for (let y = 0; y < rows; y++) {
-            // gradient from the bottom: the lower part of the letters dissolves into the page
-            const yn = (y - 1) / textRows;
-            const vfade = 1 - smooth(0.3, 1.05, yn) * 0.88;
+            const vfade = 1; // no bottom fade: letters stay solid all the way down
             for (let x = 0; x < cols; x++) {
               const c = at(x, y);
               if (c < 0.12) continue;
