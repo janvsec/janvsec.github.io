@@ -2427,10 +2427,10 @@ VKfFgrEh2/HRAEj3nkm5K187x0qPAQDInfeXfp4rBCeVJrl/va5s8kB8CcHK3DCU
 
         let spin = -G.startLon * D2R, tilt = TILT0, spinVel = AUTO;
         let cs = 1, ss = 0, ct = 1, st = 0;
-        let dragging = false, dragId = -1, lx = 0, ly = 0, lt = 0, prevNow = 0, prevRatio = 0;
+        let dragging = false, dragId = -1, lx = 0, ly = 0, lt = 0, prevNow = 0, prevRatio = 0, clock = 0;
         const ptr = { x: -1e4, y: -1e4, tx: -1e4, ty: -1e4, cx: NaN, cy: NaN, amp: 0, energy: 0, inside: false };
         const ripples = [], arcs = [], shields = [], bursts = [];
-        let lastInteract = 0, nextAmbient = performance.now() + 3000, nextAttack = performance.now() + 600;
+        let lastInteract = 0, lastRipple = 0, nextAmbient = performance.now() + 3000, nextAttack = performance.now() + 600;
         const tmp = [0, 0, 0], pv = [0, 0, 0];
 
         function setRotation() { cs = Math.cos(spin); ss = Math.sin(spin); ct = Math.cos(tilt); st = Math.sin(tilt); }
@@ -2529,7 +2529,10 @@ VKfFgrEh2/HRAEj3nkm5K187x0qPAQDInfeXfp4rBCeVJrl/va5s8kB8CcHK3DCU
             ptr.y = ptr.ty = ptr.cy - r.top;
           }
           prevRatio = ratio;
-          let fs = (narrow ? 11 : 12) + (tier < 2 && !ogMode ? 1 : 0);
+          // The look (character size, pattern detail) is fixed by the quality the page started with.
+          // If it has to slow down later it only lowers sharpness and frame rate, so the pattern never jumps.
+          const look = Quality.top;
+          let fs = (narrow ? 11 : 12) + (look < 2 && !ogMode ? 1 : 0);
           // zoomed far out (or a very large screen): slightly bigger characters, so the work per frame stays bounded
           const cells = (W / (fs * 0.55)) * (H / (fs * 1.34));
           if (cells > 32000) fs = Math.round(fs * Math.sqrt(cells / 32000) * 2) / 2;
@@ -2540,7 +2543,7 @@ VKfFgrEh2/HRAEj3nkm5K187x0qPAQDInfeXfp4rBCeVJrl/va5s8kB8CcHK3DCU
           labelFs = narrow ? 10 : 11;
           cols = Math.ceil(W / cw) + 1;
           rows = Math.ceil(H / ch) + 1;
-          octaves = tier === 2 || ogMode ? 2 : 1;
+          octaves = look === 2 || ogMode ? 2 : 1;
           S.interval = 1000 / (tier === 2 ? 30 : 24);
           const N = cols * rows;
           lev = new Uint8Array(N); ov = new Float32Array(N); ovc = new Uint8Array(N); ovk = new Uint8Array(N); ovl = [];
@@ -2610,9 +2613,12 @@ VKfFgrEh2/HRAEj3nkm5K187x0qPAQDInfeXfp4rBCeVJrl/va5s8kB8CcHK3DCU
         }
 
         function draw(now) {
-          const t = now / 1000;
           const dt = prevNow ? Math.min(0.1, (now - prevNow) / 1000) : 0;
           prevNow = now;
+          // the field's own clock only runs while it is being drawn: after a pause (other tab, scrolled away,
+          // a stutter) it carries on where it stopped instead of jumping ahead to a different pattern
+          clock += dt;
+          const t = clock;
           const live = Quality.tier > 0;
 
           if (!dragging) {
@@ -2637,13 +2643,22 @@ VKfFgrEh2/HRAEj3nkm5K187x0qPAQDInfeXfp4rBCeVJrl/va5s8kB8CcHK3DCU
             }
             nextAmbient = now + 6000 + Math.random() * 4000;
           }
-          for (let k = ripples.length - 1; k >= 0; k--) if (now - ripples[k].t0 > 2300) ripples.splice(k, 1);
+          for (let k = ripples.length - 1; k >= 0; k--) {
+            const rp = ripples[k];
+            if (now - rp.t0 > 2300 || (rp.out && now - rp.out > 320)) ripples.splice(k, 1);
+          }
 
           // 1) flowing field + cursor glow + ripples
           const drift = t * 0.075, zf = t * 0.16, zf2 = t * 0.26 + 10;
-          const pr = narrow ? 90 : 140, pr2 = 2 * pr * pr;
+          const pr = narrow ? 90 : 140, pr2 = 2 * pr * pr, pCut = 9 * pr * pr;
           const pAmp = ptr.amp * (0.18 + 0.5 * ptr.energy);
+          // a ripple is a thin ring: only the characters close to it are worked out, so clicking a lot stays cheap
           const rw2 = 2 * 22 * 22, nR = ripples.length;
+          for (let k = 0; k < nR; k++) {
+            const rp = ripples[k], el = now - rp.t0, age = el / 2300, R = el * 0.3;
+            rp.R = R; rp.amp = rp.a * (1 - age) * (1 - age) * (rp.out ? 1 - smooth(0, 320, now - rp.out) : 1);
+            rp.in2 = R > 66 ? (R - 66) * (R - 66) : 0; rp.out2 = (R + 66) * (R + 66);
+          }
           for (let y = 0; y < rows; y++) {
             const py = y * ch, row = y * cols;
             for (let x = 0; x < cols; x++) {
@@ -2657,11 +2672,12 @@ VKfFgrEh2/HRAEj3nkm5K187x0qPAQDInfeXfp4rBCeVJrl/va5s8kB8CcHK3DCU
                 v = smooth(-0.26, 0.46, n) * m;
               }
               if (g >= 0.008) {
-                if (pAmp > 0.004) { const dx = px - ptr.x, dy = py - ptr.y; v += Math.exp(-(dx * dx + dy * dy) / pr2) * pAmp * g; }
+                if (pAmp > 0.004) { const dx = px - ptr.x, dy = py - ptr.y, q = dx * dx + dy * dy; if (q < pCut) v += Math.exp(-q / pr2) * pAmp * g; }
                 for (let k = 0; k < nR; k++) {
-                  const rp = ripples[k], age = (now - rp.t0) / 2300;
-                  const d = Math.hypot(px - rp.x, py - rp.y) - (now - rp.t0) * 0.3;
-                  v += Math.exp(-(d * d) / rw2) * rp.a * (1 - age) * (1 - age) * g;
+                  const rp = ripples[k], dx = px - rp.x, dy = py - rp.y, q = dx * dx + dy * dy;
+                  if (q > rp.out2 || q < rp.in2) continue;
+                  const d = Math.sqrt(q) - rp.R;
+                  v += Math.exp(-(d * d) / rw2) * rp.amp * g;
                 }
               }
               lev[i] = v >= 1 ? NL - 1 : Math.round(v * (NL - 1));
@@ -2778,9 +2794,15 @@ VKfFgrEh2/HRAEj3nkm5K187x0qPAQDInfeXfp4rBCeVJrl/va5s8kB8CcHK3DCU
         canvas.addEventListener('pointerdown', e => {
           const r = canvas.getBoundingClientRect();
           const x = e.clientX - r.left, y = e.clientY - r.top;
-          lastInteract = performance.now();
-          if (Quality.tier > 0) {
-            ripples.push({ x: x, y: y, t0: performance.now(), a: 0.7 });
+          const now = performance.now();
+          lastInteract = now;
+          // Spam-clicking: at most one new ripple every 90 ms, and at most 6 at full strength.
+          // Older ones then fade out over a third of a second instead of vanishing.
+          if (Quality.tier > 0 && now - lastRipple >= 90) {
+            lastRipple = now;
+            let keep = 0;
+            for (let k = ripples.length - 1; k >= 0; k--) if (!ripples[k].out && ++keep > 5) ripples[k].out = now;
+            ripples.push({ x: x, y: y, t0: now, a: 0.7 });
           }
           wake();
         });
